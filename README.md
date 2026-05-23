@@ -34,6 +34,18 @@ Double-click **SD Solutions** on your desktop, or run:
 python -m sds --demo
 ```
 
+## Trinidad & Tobago legal knowledge base
+
+Cross-reference evidence against T&T law summaries during analysis.
+
+```powershell
+python -m legal_kb init          # seed Evidence Act, Constitution, etc.
+python -m legal_kb import file.md --citation "Chap 7:02" --title "Evidence Act"
+python -m legal_kb search hearsay
+```
+
+Browse on the website: `/legal` — see [docs/LEGAL_KB.md](docs/LEGAL_KB.md).
+
 ## Disclaimer
 
 Decision-support only — not legal advice. All outputs require review by qualified legal counsel before court use.
