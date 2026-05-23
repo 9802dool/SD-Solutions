@@ -20,6 +20,7 @@ from pathlib import Path
 
 from .analyzer import analyze_case, report_to_markdown
 from .ingest import ingest_uploads
+from .report_docx import write_report_docx
 
 
 def _demo_documents() -> dict[str, str]:
@@ -52,7 +53,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        help="Optional path to write markdown report",
+        help="Optional path to write report (.docx or .md)",
     )
     args = parser.parse_args()
 
@@ -74,7 +75,10 @@ def main() -> None:
     print(markdown)
 
     if args.output:
-        args.output.write_text(markdown, encoding="utf-8")
+        if args.output.suffix.lower() == ".docx":
+            write_report_docx(report, args.output)
+        else:
+            args.output.write_text(markdown, encoding="utf-8")
         print(f"\nReport written to {args.output}", file=sys.stderr)
 
 

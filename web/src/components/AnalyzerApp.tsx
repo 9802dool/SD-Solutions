@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { analyzeCase, reportToMarkdown } from "@/lib/analyzer";
+import { downloadReportAsDocx } from "@/lib/report-to-docx";
 import { getDemoDocuments } from "@/lib/demo-data";
 import { loadLegalKb, type LegalKnowledgeBase } from "@/lib/legal-kb";
 import type { AnalysisReport } from "@/lib/types";
@@ -31,6 +32,7 @@ export function AnalyzerApp() {
   const [tab, setTab] = useState<Tab>("documents");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
   const [legalKb, setLegalKb] = useState<LegalKnowledgeBase | null>(null);
 
   useEffect(() => {
@@ -69,15 +71,17 @@ export function AnalyzerApp() {
     setTab("documents");
   }
 
-  function downloadReport() {
+  async function downloadReport() {
     if (!report) return;
-    const blob = new Blob([markdown], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${caseReference}-sds-report.md`;
-    link.click();
-    URL.revokeObjectURL(url);
+    setExportBusy(true);
+    setError("");
+    try {
+      await downloadReportAsDocx(report, `${caseReference}-sds-report.docx`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create Word document.");
+    } finally {
+      setExportBusy(false);
+    }
   }
 
   const tabs: { id: Tab; label: string }[] = [
@@ -334,10 +338,14 @@ export function AnalyzerApp() {
                 <button
                   type="button"
                   onClick={downloadReport}
-                  className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold hover:bg-blue-500"
+                  disabled={exportBusy}
+                  className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-60"
                 >
-                  Download markdown report
+                  {exportBusy ? "Creating Word document…" : "Download Word report (.docx)"}
                 </button>
+                <p className="text-sm text-[var(--muted)]">
+                  Opens in Microsoft Word for editing. Preview below is plain text.
+                </p>
                 <pre className="max-h-96 overflow-auto rounded-lg bg-[#0f172a] p-4 text-xs whitespace-pre-wrap">
                   {markdown}
                 </pre>

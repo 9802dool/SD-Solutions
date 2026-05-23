@@ -20,6 +20,7 @@ import streamlit as st
 
 from sds.analyzer import analyze_case, report_to_markdown
 from sds.ingest import extract_text
+from sds.report_docx import report_to_docx_bytes
 
 st.set_page_config(
     page_title="SD Solutions (SDS)",
@@ -126,11 +127,12 @@ if documents:
 
     with tab_export:
         markdown = report_to_markdown(report)
+        docx_bytes = report_to_docx_bytes(report)
         st.download_button(
-            "Download markdown report",
-            data=markdown,
-            file_name=f"{case_reference}-sds-report.md",
-            mime="text/markdown",
+            "Download Word report (.docx)",
+            data=docx_bytes,
+            file_name=f"{case_reference}-sds-report.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         st.text_area("Preview", markdown, height=400)
 
