@@ -28,12 +28,16 @@ const bandColors: Record<string, string> = {
 
 export function AnalyzerApp() {
   const [caseReference, setCaseReference] = useState("CR-2026-001");
+  const [uploadedDocuments, setUploadedDocuments] = useState<Record<string, string>>({});
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [tab, setTab] = useState<Tab>("documents");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [legalKb, setLegalKb] = useState<LegalKnowledgeBase | null>(null);
+
+  const uploadedCount = Object.keys(uploadedDocuments).length;
+  const hasUploads = uploadedCount > 0;
 
   useEffect(() => {
     loadLegalKb()
@@ -46,20 +50,33 @@ export function AnalyzerApp() {
     [report],
   );
 
-  async function readFiles(files: FileList | null) {
+  async function handleFileUpload(files: FileList | null) {
     if (!files?.length) return;
+    setError("");
+    try {
+      const next: Record<string, string> = { ...uploadedDocuments };
+      for (const file of Array.from(files)) {
+        next[file.name] = await file.text();
+      }
+      setUploadedDocuments(next);
+      setReport(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to read files.");
+    }
+  }
+
+  function runAnalysis() {
+    if (!hasUploads) {
+      setError("Upload at least one document before analysing.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
-      const documents: Record<string, string> = {};
-      for (const file of Array.from(files)) {
-        const text = await file.text();
-        documents[file.name] = text;
-      }
-      setReport(analyzeCase(documents, caseReference, legalKb));
+      setReport(analyzeCase(uploadedDocuments, caseReference, legalKb));
       setTab("documents");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to read files.");
+      setError(e instanceof Error ? e.message : "Analysis failed.");
     } finally {
       setBusy(false);
     }
@@ -67,8 +84,23 @@ export function AnalyzerApp() {
 
   function runDemo() {
     setError("");
-    setReport(analyzeCase(getDemoDocuments(), caseReference, legalKb));
-    setTab("documents");
+    const demo = getDemoDocuments();
+    setUploadedDocuments(demo);
+    setBusy(true);
+    try {
+      setReport(analyzeCase(demo, caseReference, legalKb));
+      setTab("documents");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Demo analysis failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function clearUploads() {
+    setUploadedDocuments({});
+    setReport(null);
+    setError("");
   }
 
   async function downloadReport() {
@@ -140,25 +172,58 @@ export function AnalyzerApp() {
           />
         </div>
         <div className="flex flex-col gap-3 sm:justify-end">
-          <label className="cursor-pointer rounded-lg bg-blue-600 px-5 py-2 text-center text-sm font-semibold hover:bg-blue-500">
+          <label className="cursor-pointer rounded-lg border border-[var(--border)] px-5 py-2 text-center text-sm font-semibold hover:bg-white/5">
             Upload documents (.txt, .md)
             <input
               type="file"
               accept=".txt,.md,text/plain,text/markdown"
               multiple
               className="hidden"
-              onChange={(e) => readFiles(e.target.files)}
+              onChange={(e) => handleFileUpload(e.target.files)}
             />
           </label>
           <button
             type="button"
+            onClick={runAnalysis}
+            disabled={!hasUploads || busy}
+            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? "Analysing…" : "Analyze case"}
+          </button>
+          <button
+            type="button"
             onClick={runDemo}
-            className="rounded-lg border border-[var(--border)] px-5 py-2 text-sm font-semibold hover:bg-white/5"
+            disabled={busy}
+            className="rounded-lg border border-[var(--border)] px-5 py-2 text-sm font-semibold hover:bg-white/5 disabled:opacity-50"
           >
             Run demo case
           </button>
+          {hasUploads && (
+            <button
+              type="button"
+              onClick={clearUploads}
+              className="text-xs text-[var(--muted)] hover:text-red-300"
+            >
+              Clear {uploadedCount} uploaded file{uploadedCount === 1 ? "" : "s"}
+            </button>
+          )}
         </div>
       </section>
+
+      {hasUploads && !report && (
+        <section className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+          <p className="text-sm font-medium">Ready to analyse</p>
+          <ul className="mt-2 space-y-1 text-sm text-[var(--muted)]">
+            {Object.keys(uploadedDocuments).map((name) => (
+              <li key={name}>• {name}</li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm text-blue-200">
+            Press <strong>Analyze case</strong> to sort findings into strengths, weaknesses,
+            conviction gaps, TT law refs, and KC cross-examination.
+          </p>
+        </section>
+      )}
 
       {busy && <p className="mb-4 text-sm text-[var(--muted)]">Analysing…</p>}
       {error && (
@@ -355,9 +420,9 @@ export function AnalyzerApp() {
         </>
       )}
 
-      {!report && !busy && (
+      {!report && !busy && !hasUploads && (
         <p className="text-center text-sm text-[var(--muted)]">
-          Upload case documents or run the demo to begin analysis.
+          Upload case documents, then press <strong>Analyze case</strong>, or use the demo.
         </p>
       )}
 

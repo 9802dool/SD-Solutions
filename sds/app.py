@@ -51,26 +51,69 @@ uploaded = st.file_uploader(
     accept_multiple_files=True,
 )
 
-run_demo = st.button("Run demo case (synthetic data)")
-
-documents: dict[str, str] = {}
-
-if run_demo:
-    from sds.cli import _demo_documents
-
-    documents = _demo_documents()
+if "pending_documents" not in st.session_state:
+    st.session_state.pending_documents = {}
+if "upload_fingerprint" not in st.session_state:
+    st.session_state.upload_fingerprint = ""
 
 if uploaded:
+    pending: dict[str, str] = {}
     for file in uploaded:
         temp_path = Path("_upload_" + file.name)
         temp_path.write_bytes(file.getvalue())
         try:
-            documents[file.name] = extract_text(temp_path)
+            pending[file.name] = extract_text(temp_path)
         finally:
             temp_path.unlink(missing_ok=True)
+    fingerprint = "|".join(
+        f"{name}:{len(text)}" for name, text in sorted(pending.items())
+    )
+    if fingerprint != st.session_state.upload_fingerprint:
+        st.session_state.upload_fingerprint = fingerprint
+        st.session_state.pending_documents = pending
+        st.session_state.pop("report", None)
+    else:
+        st.session_state.pending_documents = pending
 
-if documents:
-    report = analyze_case(documents, case_reference=case_reference)
+pending_documents: dict[str, str] = st.session_state.pending_documents
+pending_count = len(pending_documents)
+
+col_demo, col_analyze, col_clear = st.columns([1, 1, 1])
+with col_demo:
+    run_demo = st.button("Run demo case (synthetic data)")
+with col_analyze:
+    run_analyze = st.button(
+        "Analyze case",
+        type="primary",
+        disabled=pending_count == 0,
+    )
+with col_clear:
+    if pending_count and st.button("Clear uploads"):
+        st.session_state.pending_documents = {}
+        st.session_state.upload_fingerprint = ""
+        st.session_state.pop("report", None)
+        st.rerun()
+
+if run_demo:
+    from sds.cli import _demo_documents
+
+    st.session_state.pending_documents = _demo_documents()
+    pending_documents = st.session_state.pending_documents
+    pending_count = len(pending_documents)
+    run_analyze = True
+
+if pending_count and "report" not in st.session_state:
+    st.info(
+        f"**{pending_count}** document(s) ready: "
+        + ", ".join(pending_documents.keys())
+        + ". Press **Analyze case** to sort into categories."
+    )
+
+if run_analyze and pending_documents:
+    st.session_state.report = analyze_case(pending_documents, case_reference=case_reference)
+
+if st.session_state.get("report"):
+    report = st.session_state.report
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Readiness score", f"{report.readiness_score}/100")
@@ -137,6 +180,6 @@ if documents:
         st.text_area("Preview", markdown, height=400)
 
 else:
-    st.info("Upload documents or click **Run demo case** to begin.")
+    st.info("Upload documents, then press **Analyze case**, or use the demo.")
 
 st.caption("SD Solutions (SDS) — decision-support only; not legal advice.")
