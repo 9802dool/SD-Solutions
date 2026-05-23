@@ -1,0 +1,231 @@
+{
+  "jurisdiction": "Trinidad and Tobago",
+  "sources": [
+    {
+      "id": 5,
+      "title": "Computer Misuse Act",
+      "sourceType": "act",
+      "citation": "Chap 11:17",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": null,
+      "summary": "Integrity of computer systems; lawful handling of digital evidence."
+    },
+    {
+      "id": 2,
+      "title": "Constitution of Trinidad and Tobago",
+      "sourceType": "constitution",
+      "citation": "Constitution 1976",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": "https://www.ttparliament.org/",
+      "summary": "Fundamental rights including fair hearing and protection from arbitrary treatment."
+    },
+    {
+      "id": 4,
+      "title": "Criminal Procedure",
+      "sourceType": "act",
+      "citation": "Criminal Procedure Chap (in force provisions)",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": null,
+      "summary": "Procedure for prosecution, disclosure, and trial conduct."
+    },
+    {
+      "id": 6,
+      "title": "Data Protection Act",
+      "sourceType": "act",
+      "citation": "Act 2011 (partially proclaimed)",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": null,
+      "summary": "Privacy and lawful processing of personal data by public bodies."
+    },
+    {
+      "id": 1,
+      "title": "Evidence Act",
+      "sourceType": "act",
+      "citation": "Chap 7:02",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": "https://www.ttlawcourts.org/",
+      "summary": "Governs admissibility, hearsay, documentary and opinion evidence in T&T proceedings."
+    },
+    {
+      "id": 7,
+      "title": "Judges Rules / Statement Guidance",
+      "sourceType": "guidance",
+      "citation": "Judges Rules (Commonwealth practice)",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": null,
+      "summary": "Fair treatment of persons when statements are taken for use in criminal proceedings."
+    },
+    {
+      "id": 3,
+      "title": "Police Service Act",
+      "sourceType": "act",
+      "citation": "Chap 15:01",
+      "jurisdiction": "Trinidad and Tobago",
+      "officialUrl": "https://www.ttps.gov.tt/",
+      "summary": "Mandate, discipline, and organisational lawfulness of the TTPS."
+    }
+  ],
+  "sections": [
+    {
+      "id": 10,
+      "citation": "Chap 11:17",
+      "sourceTitle": "Computer Misuse Act",
+      "sectionRef": "digital-seizure",
+      "title": "Computer Misuse and digital seizure",
+      "summary": "Digital devices must be lawfully seized and forensically handled. Screenshots alone may not establish integrity without examiner evidence.",
+      "keywords": "device seizure, forensic, hash, cybercrime, screenshot",
+      "evidenceTags": [
+        "Digital / cyber evidence"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 7,
+      "citation": "Constitution 1976",
+      "sourceTitle": "Constitution of Trinidad and Tobago",
+      "sectionRef": "s4-fair-hearing",
+      "title": "Fair hearing",
+      "summary": "Accused persons are entitled to a fair hearing. Late disclosure or concealment of unused material may breach fair-trial obligations.",
+      "keywords": "disclosure, unused material, fair trial, abuse of process",
+      "evidenceTags": [
+        "Disclosure and unused material"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 9,
+      "citation": "Criminal Procedure Chap (in force provisions)",
+      "sourceTitle": "Criminal Procedure",
+      "sectionRef": "disclosure",
+      "title": "Prosecution disclosure",
+      "summary": "Prosecution must disclose material relevant to the defence. Schedules should be kept current; failure risks stay or abuse-of-process applications.",
+      "keywords": "disclosure schedule, MG6, unused material, withheld",
+      "evidenceTags": [
+        "Disclosure and unused material"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 11,
+      "citation": "Act 2011 (partially proclaimed)",
+      "sourceTitle": "Data Protection Act",
+      "sectionRef": "data-processing",
+      "title": "Data protection in investigations",
+      "summary": "Personal data in case files must be processed lawfully with access controls and retention limits appropriate to public-sector investigations.",
+      "keywords": "PII, personal data, retention, access log",
+      "evidenceTags": [
+        "Disclosure and unused material",
+        "Witness statements"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 13,
+      "citation": "Chap 7:02",
+      "sourceTitle": "Evidence Act",
+      "sectionRef": "s-corroboration",
+      "title": "Corroboration and proof",
+      "summary": "Prosecution must prove the case beyond reasonable doubt. Uncorroborated single-witness cases require careful assessment of consistency and independent support.",
+      "keywords": "sole witness, uncorroborated, consistent, CCTV confirms",
+      "evidenceTags": [
+        "Corroboration and consistency",
+        "Identification evidence"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 4,
+      "citation": "Chap 7:02",
+      "sourceTitle": "Evidence Act",
+      "sectionRef": "s-documentary",
+      "title": "Documentary evidence",
+      "summary": "Documents require proof of authenticity. Copies may need certification or a witness to prove the original or business-records foundation.",
+      "keywords": "original document, certified copy, business record, photocopy",
+      "evidenceTags": [
+        "Documentary / hearsay"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 6,
+      "citation": "Chap 7:02",
+      "sourceTitle": "Evidence Act",
+      "sectionRef": "s-electronic",
+      "title": "Electronic records",
+      "summary": "Electronic records must be authenticated. Hash values, forensic imaging, and examiner evidence support integrity arguments for digital exhibits.",
+      "keywords": "hash, forensic image, WhatsApp, digital, metadata",
+      "evidenceTags": [
+        "Digital / cyber evidence"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 5,
+      "citation": "Chap 7:02",
+      "sourceTitle": "Evidence Act",
+      "sectionRef": "s-opinion",
+      "title": "Opinion and expert evidence",
+      "summary": "Expert opinion requires proof of qualifications, methodology, and reliable procedure. Informal opinions without report are vulnerable on cross-examination.",
+      "keywords": "expert report, forensic, laboratory, methodology, calibration",
+      "evidenceTags": [
+        "Expert / forensic evidence"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 3,
+      "citation": "Chap 7:02",
+      "sourceTitle": "Evidence Act",
+      "sectionRef": "s-real-evidence",
+      "title": "Real evidence and identification",
+      "summary": "Physical exhibits must be identifiable and continuity must be provable. Identification evidence is scrutinised where witness observation conditions are poor.",
+      "keywords": "exhibit, identification, parade, Turnbull, CCTV",
+      "evidenceTags": [
+        "Identification evidence",
+        "Exhibits and continuity"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 1,
+      "citation": "Chap 7:02",
+      "sourceTitle": "Evidence Act",
+      "sectionRef": "s5-hearsay",
+      "title": "Hearsay rule and exceptions",
+      "summary": "Hearsay is generally excluded unless brought within a statutory or common-law exception. Prosecution should identify the exception and call the maker where required.",
+      "keywords": "hearsay, second-hand, rumour, document maker",
+      "evidenceTags": [
+        "Documentary / hearsay",
+        "Corroboration and consistency"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 12,
+      "citation": "Judges Rules (Commonwealth practice)",
+      "sourceTitle": "Judges Rules / Statement Guidance",
+      "sectionRef": "statement-fairness",
+      "title": "Fairness when taking statements",
+      "summary": "Statements should be taken fairly with appropriate cautions and, where practicable, contemporaneous recording. Interpreter use must be documented.",
+      "keywords": "caution, recorded interview, interpreter, unsigned, verbal only",
+      "evidenceTags": [
+        "Witness statements"
+      ],
+      "fullText": null
+    },
+    {
+      "id": 8,
+      "citation": "Chap 15:01",
+      "sourceTitle": "Police Service Act",
+      "sectionRef": "police-powers",
+      "title": "Police powers and lawful process",
+      "summary": "TTPS powers must be exercised lawfully. Statements and seizures must follow established procedure and internal authorisation policies.",
+      "keywords": "caution, arrest, seizure, statement, notebook",
+      "evidenceTags": [
+        "Witness statements",
+        "Exhibits and continuity"
+      ],
+      "fullText": null
+    }
+  ]
+}

@@ -59,6 +59,15 @@ export interface ModelPrediction {
   humanOversightRequired: boolean;
 }
 
+export interface LegalCrossReference {
+  citation: string;
+  sectionRef: string;
+  sourceTitle: string;
+  title: string;
+  summary: string;
+  relevance: string;
+}
+
 export interface AnalysisReport {
   caseReference: string;
   documents: DocumentSummary[];
@@ -69,6 +78,7 @@ export interface AnalysisReport {
   extractedFeatures: ExtractedFeature[];
   weightedScores: WeightedScore[];
   missingElements: MissingElement[];
+  legalCrossReferences: LegalCrossReference[];
   modelPrediction: ModelPrediction | null;
   readinessBand: ReadinessBand;
   readinessScore: number;

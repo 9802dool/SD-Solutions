@@ -13,6 +13,7 @@ import {
   detectMissingElements,
 } from "./scoring";
 import type { AnalysisReport, ReadinessBand, Recommendation } from "./types";
+import { crossReferenceCase, type LegalKnowledgeBase } from "./legal-kb";
 
 export const DISCLAIMER =
   "SD SOLUTIONS (SDS) — DECISION-SUPPORT ONLY. NOT LEGAL ADVICE. " +
@@ -44,6 +45,7 @@ function renumber(items: Recommendation[]): Recommendation[] {
 export function analyzeCase(
   documents: Record<string, string>,
   caseReference = "UNASSIGNED",
+  legalKb?: LegalKnowledgeBase | null,
 ): AnalysisReport {
   if (Object.keys(documents).length === 0) {
     throw new Error("At least one document is required.");
@@ -133,6 +135,15 @@ export function analyzeCase(
   recommendations.sort((a, b) => a.priority - b.priority);
   const crossExamination = generateCrossExamination(weaknesses);
 
+  const legalCrossReferences = legalKb
+    ? crossReferenceCase(
+        legalKb,
+        combinedText,
+        weaknesses.map((w) => w.category),
+        missingElements.map((m) => m.element),
+      )
+    : [];
+
   const ruleScore = Math.max(0, Math.min(100, 55 + strengths.length * 8 - weaknesses.length * 7));
   const readinessScore = Math.round((compositeScore + ruleScore) / 2);
   const readinessBand = scoreToBand(readinessScore);
@@ -149,11 +160,12 @@ export function analyzeCase(
     extractedFeatures,
     weightedScores,
     missingElements,
+    legalCrossReferences,
     modelPrediction,
     readinessBand,
     readinessScore,
     compositeScore,
-    summary: `Case \`${caseReference}\`: ${Object.keys(documents).length} document(s) analysed. ML conviction confidence: ${modelPrediction.confidenceLabel} (${mlPct.toFixed(0)}%) via ${modelPrediction.modelName}. Composite evidence score: ${readinessScore}/100 (${readinessBand}). ${strengths.length} rule strength(s), ${weaknesses.length} weakness/gap signal(s) (${highWeaknesses} high). ${missingElements.length} potential conviction gap(s) flagged. Human review required.`,
+    summary: `Case \`${caseReference}\`: ${Object.keys(documents).length} document(s) analysed. ML conviction confidence: ${modelPrediction.confidenceLabel} (${mlPct.toFixed(0)}%) via ${modelPrediction.modelName}. Composite evidence score: ${readinessScore}/100 (${readinessBand}). ${strengths.length} rule strength(s), ${weaknesses.length} weakness/gap signal(s) (${highWeaknesses} high). ${missingElements.length} potential conviction gap(s). ${legalCrossReferences.length} TT legal cross-reference(s). Human review required.`,
     biasNotice: BIAS_NOTICE,
     disclaimer: DISCLAIMER,
   };
@@ -201,6 +213,19 @@ export function reportToMarkdown(report: AnalysisReport): string {
         (g) => `- **[${g.severity.toUpperCase()}] ${g.element}:** ${g.detail}`,
       ),
     );
+  }
+
+  if (report.legalCrossReferences.length) {
+    lines.push("", "## Trinidad & Tobago legal cross-references");
+    for (const ref of report.legalCrossReferences) {
+      lines.push(
+        `### ${ref.citation} — ${ref.sectionRef}: ${ref.title}`,
+        `*Source:* ${ref.sourceTitle}`,
+        ref.summary,
+        `*Relevance:* ${ref.relevance}`,
+        "",
+      );
+    }
   }
 
   lines.push(

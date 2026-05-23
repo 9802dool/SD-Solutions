@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { analyzeCase, reportToMarkdown } from "@/lib/analyzer";
 import { getDemoDocuments } from "@/lib/demo-data";
+import { loadLegalKb, type LegalKnowledgeBase } from "@/lib/legal-kb";
 import type { AnalysisReport } from "@/lib/types";
 
 type Tab =
@@ -10,6 +12,7 @@ type Tab =
   | "features"
   | "ml"
   | "gaps"
+  | "legal"
   | "strengths"
   | "weaknesses"
   | "actions"
@@ -28,6 +31,13 @@ export function AnalyzerApp() {
   const [tab, setTab] = useState<Tab>("documents");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [legalKb, setLegalKb] = useState<LegalKnowledgeBase | null>(null);
+
+  useEffect(() => {
+    loadLegalKb()
+      .then(setLegalKb)
+      .catch(() => setLegalKb(null));
+  }, []);
 
   const markdown = useMemo(
     () => (report ? reportToMarkdown(report) : ""),
@@ -44,7 +54,7 @@ export function AnalyzerApp() {
         const text = await file.text();
         documents[file.name] = text;
       }
-      setReport(analyzeCase(documents, caseReference));
+      setReport(analyzeCase(documents, caseReference, legalKb));
       setTab("documents");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to read files.");
@@ -55,7 +65,7 @@ export function AnalyzerApp() {
 
   function runDemo() {
     setError("");
-    setReport(analyzeCase(getDemoDocuments(), caseReference));
+    setReport(analyzeCase(getDemoDocuments(), caseReference, legalKb));
     setTab("documents");
   }
 
@@ -75,6 +85,7 @@ export function AnalyzerApp() {
     { id: "features", label: "NLP features" },
     { id: "ml", label: "ML confidence" },
     { id: "gaps", label: "Conviction gaps" },
+    { id: "legal", label: "TT law refs" },
     { id: "strengths", label: "Strengths" },
     { id: "weaknesses", label: "Weaknesses" },
     { id: "actions", label: "Bulletproofing" },
@@ -91,12 +102,15 @@ export function AnalyzerApp() {
           </p>
           <h1 className="text-3xl font-bold sm:text-4xl">SD Solutions</h1>
           <p className="mt-2 max-w-2xl text-[var(--muted)]">
-            Rule-based legal evaluation + NLP feature extraction + weighted evidence
-            scoring + Random Forest conviction confidence — with human oversight required.
+            Rule-based legal evaluation + NLP features + weighted scoring + ML confidence
+            + Trinidad &amp; Tobago legal cross-reference.
           </p>
+          <Link href="/legal" className="mt-2 inline-block text-sm text-blue-400 hover:underline">
+            Browse TT legal library →
+          </Link>
         </div>
         <div className="rounded-full border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm text-[var(--muted)]">
-          Analysis runs in your browser — files are not uploaded to a server.
+          Analysis runs in your browser. Legal KB: {legalKb ? `${legalKb.sections.length} TT sections` : "loading…"}
         </div>
       </header>
 
@@ -233,6 +247,24 @@ export function AnalyzerApp() {
               ) : (
                 <p className="text-sm text-green-400">
                   No major conviction gaps detected in uploaded text (verify manually).
+                </p>
+              ))}
+
+            {tab === "legal" &&
+              (report.legalCrossReferences.length ? (
+                report.legalCrossReferences.map((ref, i) => (
+                  <div key={i} className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+                    <p className="font-semibold">
+                      {ref.citation} — {ref.sectionRef}: {ref.title}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">{ref.sourceTitle}</p>
+                    <p className="mt-2 text-sm">{ref.summary}</p>
+                    <p className="mt-2 text-xs text-blue-300">{ref.relevance}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-[var(--muted)]">
+                  No legal cross-references matched. Add laws via `python -m legal_kb import`.
                 </p>
               ))}
 

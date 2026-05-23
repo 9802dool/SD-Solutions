@@ -82,6 +82,16 @@ class ModelPrediction:
     human_oversight_required: bool = True
 
 
+@dataclass(frozen=True)
+class LegalCrossReference:
+    citation: str
+    section_ref: str
+    source_title: str
+    title: str
+    summary: str
+    relevance: str
+
+
 @dataclass
 class AnalysisReport:
     case_reference: str
@@ -93,6 +103,7 @@ class AnalysisReport:
     extracted_features: list[ExtractedFeature] = field(default_factory=list)
     weighted_scores: list[WeightedScore] = field(default_factory=list)
     missing_elements: list[MissingElement] = field(default_factory=list)
+    legal_cross_references: list[LegalCrossReference] = field(default_factory=list)
     model_prediction: ModelPrediction | None = None
     readiness_band: ReadinessBand = ReadinessBand.DEVELOPING
     readiness_score: int = 0

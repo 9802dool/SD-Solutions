@@ -29,5 +29,8 @@ Thumbs.db
 .vscode/
 
 # next (web subfolder has its own gitignore too)
+data/legal/*.db
 models/*.joblib
 web/node_modules/
+web/.next/
+web/out/

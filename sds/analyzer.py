@@ -8,6 +8,7 @@ from .models import (
     AnalysisReport,
     DocumentSummary,
     Finding,
+    LegalCrossReference,
     ReadinessBand,
     Recommendation,
     Severity,
@@ -130,6 +131,12 @@ def analyze_case(
     recommendations = _renumber_recommendations(recommendations)
     cross_examination = generate_cross_examination(weaknesses)
 
+    legal_cross_references = _build_legal_cross_references(
+        combined_text=combined_text,
+        weaknesses=weaknesses,
+        missing_elements=missing_elements,
+    )
+
     rule_score = max(0, min(100, 55 + len(strengths) * 8 - len(weaknesses) * 7))
     readiness_score = round((composite + rule_score) / 2)
     readiness_band = _score_to_band(readiness_score)
@@ -141,7 +148,8 @@ def analyze_case(
         f"ML conviction confidence: {model_prediction.confidence_label} ({ml_pct:.0f}%) via {model_prediction.model_name}. "
         f"Composite evidence score: {readiness_score}/100 ({readiness_band.value}). "
         f"{len(strengths)} rule strength(s), {len(weaknesses)} weakness/gap signal(s) ({high_weaknesses} high). "
-        f"{len(missing_elements)} potential conviction gap(s) flagged. Human review required."
+        f"{len(missing_elements)} potential conviction gap(s) flagged. "
+        f"{len(legal_cross_references)} TT legal cross-reference(s). Human review required."
     )
 
     return AnalysisReport(
@@ -154,6 +162,7 @@ def analyze_case(
         extracted_features=extracted_features,
         weighted_scores=weighted_scores,
         missing_elements=missing_elements,
+        legal_cross_references=legal_cross_references,
         model_prediction=model_prediction,
         readiness_band=readiness_band,
         readiness_score=readiness_score,
@@ -162,6 +171,35 @@ def analyze_case(
         bias_notice=BIAS_NOTICE,
         disclaimer=DISCLAIMER,
     )
+
+
+def _build_legal_cross_references(
+    *,
+    combined_text: str,
+    weaknesses: list[Finding],
+    missing_elements: list,
+) -> list[LegalCrossReference]:
+    try:
+        from legal_kb.cross_reference import cross_reference_case
+
+        sections = cross_reference_case(
+            combined_text=combined_text,
+            weakness_categories=[w.category for w in weaknesses],
+            missing_elements=[m.element for m in missing_elements],
+        )
+        return [
+            LegalCrossReference(
+                citation=sec.citation,
+                section_ref=sec.section_ref,
+                source_title=sec.source_title,
+                title=sec.title,
+                summary=sec.summary,
+                relevance=f"Cross-referenced to evidence theme: {sec.evidence_tags or 'general'}",
+            )
+            for sec in sections
+        ]
+    except Exception:
+        return []
 
 
 def _priority_for_category(category: str) -> int:
@@ -236,6 +274,19 @@ def report_to_markdown(report: AnalysisReport) -> str:
         lines.extend(["", "## Missing conviction elements"])
         for gap in report.missing_elements:
             lines.append(f"- **[{gap.severity.value.upper()}] {gap.element}:** {gap.detail}")
+
+    if report.legal_cross_references:
+        lines.extend(["", "## Trinidad & Tobago legal cross-references"])
+        for ref in report.legal_cross_references:
+            lines.extend(
+                [
+                    f"### {ref.citation} — {ref.section_ref}: {ref.title}",
+                    f"*Source:* {ref.source_title}",
+                    f"{ref.summary}",
+                    f"*Relevance:* {ref.relevance}",
+                    "",
+                ]
+            )
 
     lines.extend(["", "## Documents analysed"])
     for doc in report.documents:
