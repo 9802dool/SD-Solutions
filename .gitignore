@@ -1,0 +1,33 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/sds/__pycache__
+**/__pycache__
+
+# python
+*.pyc
+.venv/
+venv/
+
+# local uploads
+_upload_*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# env
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# IDE
+.idea/
+.vscode/
+
+# next (web subfolder has its own gitignore too)
+web/.next/
+web/out/
