@@ -6,7 +6,11 @@ Upload police documents and evidence bundles to assess strengths, weaknesses, bu
 
 ## Website (live)
 
-The web app lives in [`web/`](web/) — a Next.js site deployable to Vercel. Analysis runs **in the browser**; uploaded files are not sent to a server.
+**Production:** https://sd-solutions-neon.vercel.app  
+**GitHub:** https://github.com/9802dool/SD-Solutions  
+**Vercel dashboard:** https://vercel.com/simeon-doolarsinghs-projects/sd-solutions
+
+The web app lives in [`web/`](web/) — a Next.js site on Vercel. Analysis runs **in the browser**; uploaded files are not sent to a server.
 
 ```powershell
 cd web
