@@ -50,6 +50,38 @@ class CrossExamQuestion:
     follow_up: str
 
 
+@dataclass(frozen=True)
+class ExtractedFeature:
+    name: str
+    value: float
+    label: str
+    source: str  # nlp | rule
+
+
+@dataclass(frozen=True)
+class WeightedScore:
+    category: str
+    weight: float
+    score: float
+    weighted_contribution: float
+    note: str
+
+
+@dataclass(frozen=True)
+class MissingElement:
+    element: str
+    severity: Severity
+    detail: str
+
+
+@dataclass(frozen=True)
+class ModelPrediction:
+    conviction_probability: float
+    confidence_label: str
+    model_name: str
+    human_oversight_required: bool = True
+
+
 @dataclass
 class AnalysisReport:
     case_reference: str
@@ -58,7 +90,13 @@ class AnalysisReport:
     weaknesses: list[Finding] = field(default_factory=list)
     recommendations: list[Recommendation] = field(default_factory=list)
     cross_examination: list[CrossExamQuestion] = field(default_factory=list)
+    extracted_features: list[ExtractedFeature] = field(default_factory=list)
+    weighted_scores: list[WeightedScore] = field(default_factory=list)
+    missing_elements: list[MissingElement] = field(default_factory=list)
+    model_prediction: ModelPrediction | None = None
     readiness_band: ReadinessBand = ReadinessBand.DEVELOPING
     readiness_score: int = 0
+    composite_score: int = 0
     summary: str = ""
+    bias_notice: str = ""
     disclaimer: str = ""

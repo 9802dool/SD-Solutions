@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from .evidence_rules import EVIDENCE_RULES, count_pattern_matches, detect_document_types
+from .features import extract_features
 from .kc_cross_exam import generate_cross_examination, weakness_to_severity
+from .ml_model import BIAS_NOTICE, predict_conviction_strength
 from .models import (
     AnalysisReport,
     DocumentSummary,
@@ -10,11 +12,17 @@ from .models import (
     Recommendation,
     Severity,
 )
+from .scoring import (
+    composite_score_from_weights,
+    compute_weighted_scores,
+    detect_missing_elements,
+)
 
 DISCLAIMER = (
     "SD SOLUTIONS (SDS) — DECISION-SUPPORT ONLY. NOT LEGAL ADVICE. "
     "All outputs require review by qualified legal counsel. "
-    "Do not rely on automated analysis for charging, disclosure, or court decisions."
+    "Do not rely on automated analysis, NLP extraction, or ML confidence scores "
+    "for charging, disclosure, or court decisions. Human professional review is mandatory."
 )
 
 
@@ -32,6 +40,12 @@ def analyze_case(
     weaknesses: list[Finding] = []
     recommendations: list[Recommendation] = []
     seen_recommendations: set[str] = set()
+
+    feature_vector, extracted_features = extract_features(combined_text)
+    weighted_scores = compute_weighted_scores(feature_vector)
+    missing_elements = detect_missing_elements(feature_vector)
+    model_prediction = predict_conviction_strength(feature_vector)
+    composite = composite_score_from_weights(weighted_scores)
 
     for filename, text in documents.items():
         detected = tuple(detect_document_types(text))
@@ -101,20 +115,33 @@ def analyze_case(
                     )
                 )
 
+    for gap in missing_elements:
+        recommendations.insert(
+            0,
+            Recommendation(
+                priority=0,
+                action=f"Close conviction gap: {gap.element}",
+                rationale=gap.detail,
+                legal_anchor="Prosecution case preparation — proof beyond reasonable doubt",
+            ),
+        )
+
     recommendations.sort(key=lambda item: item.priority)
     recommendations = _renumber_recommendations(recommendations)
     cross_examination = generate_cross_examination(weaknesses)
 
-    readiness_score = max(0, min(100, 55 + len(strengths) * 8 - len(weaknesses) * 7))
+    rule_score = max(0, min(100, 55 + len(strengths) * 8 - len(weaknesses) * 7))
+    readiness_score = round((composite + rule_score) / 2)
     readiness_band = _score_to_band(readiness_score)
 
     high_weaknesses = sum(1 for item in weaknesses if item.severity == Severity.HIGH)
+    ml_pct = model_prediction.conviction_probability * 100
     summary = (
         f"Case `{case_reference}`: {len(documents)} document(s) analysed. "
-        f"{len(strengths)} strength signal(s), {len(weaknesses)} weakness or gap signal(s) "
-        f"({high_weaknesses} high severity). "
-        f"Overall readiness: {readiness_band.value} ({readiness_score}/100). "
-        "Use cross-examination questions to stress-test before trial."
+        f"ML conviction confidence: {model_prediction.confidence_label} ({ml_pct:.0f}%) via {model_prediction.model_name}. "
+        f"Composite evidence score: {readiness_score}/100 ({readiness_band.value}). "
+        f"{len(strengths)} rule strength(s), {len(weaknesses)} weakness/gap signal(s) ({high_weaknesses} high). "
+        f"{len(missing_elements)} potential conviction gap(s) flagged. Human review required."
     )
 
     return AnalysisReport(
@@ -124,9 +151,15 @@ def analyze_case(
         weaknesses=weaknesses,
         recommendations=recommendations,
         cross_examination=cross_examination,
+        extracted_features=extracted_features,
+        weighted_scores=weighted_scores,
+        missing_elements=missing_elements,
+        model_prediction=model_prediction,
         readiness_band=readiness_band,
         readiness_score=readiness_score,
+        composite_score=composite,
         summary=summary,
+        bias_notice=BIAS_NOTICE,
         disclaimer=DISCLAIMER,
     )
 
@@ -174,10 +207,37 @@ def report_to_markdown(report: AnalysisReport) -> str:
         report.summary,
         "",
         f"**Readiness band:** {report.readiness_band.value} ({report.readiness_score}/100)",
-        "",
-        "## Documents analysed",
     ]
 
+    if report.model_prediction:
+        mp = report.model_prediction
+        lines.extend(
+            [
+                "",
+                "## ML conviction confidence (supportive only)",
+                f"- **Label:** {mp.confidence_label}",
+                f"- **Probability:** {mp.conviction_probability * 100:.1f}%",
+                f"- **Model:** {mp.model_name}",
+                f"- **Human oversight required:** {'Yes' if mp.human_oversight_required else 'No'}",
+            ]
+        )
+
+    lines.extend(["", "## NLP extracted features"])
+    for feat in report.extracted_features:
+        lines.append(f"- **{feat.label}:** {feat.value:.2f} ({feat.source})")
+
+    lines.extend(["", "## Weighted evidence scores"])
+    for ws in report.weighted_scores:
+        lines.append(
+            f"- **{ws.category}** (weight {ws.weight:.2f}): score {ws.score:.2f} -> {ws.weighted_contribution:+.2f}"
+        )
+
+    if report.missing_elements:
+        lines.extend(["", "## Missing conviction elements"])
+        for gap in report.missing_elements:
+            lines.append(f"- **[{gap.severity.value.upper()}] {gap.element}:** {gap.detail}")
+
+    lines.extend(["", "## Documents analysed"])
     for doc in report.documents:
         types = ", ".join(doc.detected_types)
         lines.append(f"- **{doc.filename}** ({doc.word_count} words) — {types}")
@@ -211,5 +271,5 @@ def report_to_markdown(report: AnalysisReport) -> str:
             ]
         )
 
-    lines.extend(["---", report.disclaimer])
+    lines.extend(["", "## Bias and fairness notice", report.bias_notice, "", "---", report.disclaimer])
     return "\n".join(lines)

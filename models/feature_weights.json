@@ -1,0 +1,21 @@
+{
+  "importances": {
+    "credible_eyewitnesses": 0.08187514955731037,
+    "identification_quality": 0.15823163436228765,
+    "forensic_dna": 0.010812993539124195,
+    "forensic_fingerprint": 0.020328917313841944,
+    "weapon_recovered": 0.01881098614766957,
+    "confession_recorded": 0.011306532663316585,
+    "cctv_present": 0.0320424498031282,
+    "chain_of_custody": 0.153174482320211,
+    "statement_quality": 0.1453138256216146,
+    "expert_forensic": 0.039948457112401844,
+    "disclosure_complete": 0.12791228871630883,
+    "hearsay_risk": 0.028056951423785597,
+    "time_to_arrest_score": 0.17218533141899978
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "f1": 1.0
+  }
+}

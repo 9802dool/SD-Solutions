@@ -5,7 +5,16 @@ import { analyzeCase, reportToMarkdown } from "@/lib/analyzer";
 import { getDemoDocuments } from "@/lib/demo-data";
 import type { AnalysisReport } from "@/lib/types";
 
-type Tab = "documents" | "strengths" | "weaknesses" | "actions" | "cross" | "export";
+type Tab =
+  | "documents"
+  | "features"
+  | "ml"
+  | "gaps"
+  | "strengths"
+  | "weaknesses"
+  | "actions"
+  | "cross"
+  | "export";
 
 const bandColors: Record<string, string> = {
   STRONG: "text-green-400",
@@ -63,6 +72,9 @@ export function AnalyzerApp() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "documents", label: "Documents" },
+    { id: "features", label: "NLP features" },
+    { id: "ml", label: "ML confidence" },
+    { id: "gaps", label: "Conviction gaps" },
     { id: "strengths", label: "Strengths" },
     { id: "weaknesses", label: "Weaknesses" },
     { id: "actions", label: "Bulletproofing" },
@@ -79,8 +91,8 @@ export function AnalyzerApp() {
           </p>
           <h1 className="text-3xl font-bold sm:text-4xl">SD Solutions</h1>
           <p className="mt-2 max-w-2xl text-[var(--muted)]">
-            Evidence analysis, bulletproofing recommendations, and King&apos;s
-            Counsel cross-examination prep for criminal case files.
+            Rule-based legal evaluation + NLP feature extraction + weighted evidence
+            scoring + Random Forest conviction confidence — with human oversight required.
           </p>
         </div>
         <div className="rounded-full border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm text-[var(--muted)]">
@@ -88,9 +100,16 @@ export function AnalyzerApp() {
         </div>
       </header>
 
-      <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
-        Decision-support only. Not legal advice. Qualified legal counsel must
-        review all outputs before court use.
+      <div className="mb-6 space-y-3">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+          Decision-support only. Not legal advice. A qualified legal professional must
+          review all NLP and ML outputs before court use.
+        </div>
+        {report && (
+          <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-4 text-sm text-purple-100">
+            {report.biasNotice}
+          </div>
+        )}
       </div>
 
       <section className="mb-8 grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 sm:grid-cols-[1fr_auto]">
@@ -132,13 +151,14 @@ export function AnalyzerApp() {
 
       {report && (
         <>
-          <section className="mb-6 grid gap-4 sm:grid-cols-3">
-            <Metric label="Readiness score" value={`${report.readinessScore}/100`} />
-            <Metric label="Strengths" value={String(report.strengths.length)} />
+          <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Composite score" value={`${report.readinessScore}/100`} />
             <Metric
-              label="Weaknesses / gaps"
-              value={String(report.weaknesses.length)}
+              label="ML confidence"
+              value={report.modelPrediction?.confidenceLabel ?? "—"}
             />
+            <Metric label="Strengths" value={String(report.strengths.length)} />
+            <Metric label="Conviction gaps" value={String(report.missingElements.length)} />
           </section>
 
           <div className="mb-4 rounded-xl border border-[var(--border)] bg-[#0f172a] p-4">
@@ -166,6 +186,56 @@ export function AnalyzerApp() {
           </div>
 
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6">
+            {tab === "features" &&
+              report.extractedFeatures.map((feat) => (
+                <div key={feat.name} className="mb-3 flex justify-between border-b border-[var(--border)] pb-3 last:mb-0">
+                  <span className="text-sm">{feat.label}</span>
+                  <span className="font-mono text-sm text-blue-300">{feat.value.toFixed(2)}</span>
+                </div>
+              ))}
+
+            {tab === "ml" && report.modelPrediction && (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+                  <p className="text-2xl font-bold">{report.modelPrediction.confidenceLabel}</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    Conviction probability: {(report.modelPrediction.convictionProbability * 100).toFixed(1)}%
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Model: {report.modelPrediction.modelName}
+                  </p>
+                </div>
+                <p className="text-sm text-[var(--muted)]">
+                  Weighted evidence engine composite: {report.compositeScore}/100
+                </p>
+                {report.weightedScores.map((ws) => (
+                  <div key={ws.category} className="flex justify-between text-sm">
+                    <span>{ws.category}</span>
+                    <span className="font-mono">
+                      {ws.weightedContribution >= 0 ? "+" : ""}
+                      {ws.weightedContribution.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {tab === "gaps" &&
+              (report.missingElements.length ? (
+                report.missingElements.map((gap, i) => (
+                  <div key={i} className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                    <p className="font-semibold">
+                      [{gap.severity.toUpperCase()}] {gap.element}
+                    </p>
+                    <p className="mt-2 text-sm">{gap.detail}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-green-400">
+                  No major conviction gaps detected in uploaded text (verify manually).
+                </p>
+              ))}
+
             {tab === "documents" &&
               report.documents.map((doc) => (
                 <div key={doc.filename} className="mb-4 border-b border-[var(--border)] pb-4 last:mb-0 last:border-0">

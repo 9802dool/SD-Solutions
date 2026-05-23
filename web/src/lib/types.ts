@@ -31,6 +31,34 @@ export interface CrossExamQuestion {
   followUp: string;
 }
 
+export interface ExtractedFeature {
+  name: string;
+  value: number;
+  label: string;
+  source: "nlp" | "rule";
+}
+
+export interface WeightedScore {
+  category: string;
+  weight: number;
+  score: number;
+  weightedContribution: number;
+  note: string;
+}
+
+export interface MissingElement {
+  element: string;
+  severity: Severity;
+  detail: string;
+}
+
+export interface ModelPrediction {
+  convictionProbability: number;
+  confidenceLabel: string;
+  modelName: string;
+  humanOversightRequired: boolean;
+}
+
 export interface AnalysisReport {
   caseReference: string;
   documents: DocumentSummary[];
@@ -38,10 +66,32 @@ export interface AnalysisReport {
   weaknesses: Finding[];
   recommendations: Recommendation[];
   crossExamination: CrossExamQuestion[];
+  extractedFeatures: ExtractedFeature[];
+  weightedScores: WeightedScore[];
+  missingElements: MissingElement[];
+  modelPrediction: ModelPrediction | null;
   readinessBand: ReadinessBand;
   readinessScore: number;
+  compositeScore: number;
   summary: string;
+  biasNotice: string;
   disclaimer: string;
+}
+
+export interface FeatureVector {
+  credibleEyewitnesses: number;
+  identificationQuality: number;
+  forensicDna: number;
+  forensicFingerprint: number;
+  weaponRecovered: number;
+  confessionRecorded: number;
+  cctvPresent: number;
+  chainOfCustody: number;
+  statementQuality: number;
+  expertForensic: number;
+  disclosureComplete: number;
+  hearsayRisk: number;
+  timeToArrestScore: number;
 }
 
 export interface EvidenceRule {
